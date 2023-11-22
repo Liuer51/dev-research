@@ -1,0 +1,180 @@
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_wifi.h"
+#include "esp_tls.h"
+#include "esp_http_client.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+#include "cJSON.h"
+
+static const char *TAG = "https";
+
+esp_err_t _http_event_handler(esp_http_client_event_t *evt)
+{
+    static char *output_buffer;
+    static int output_len;
+    switch (evt->event_id)
+    {
+    case HTTP_EVENT_ERROR:
+        ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
+        break;
+    case HTTP_EVENT_ON_CONNECTED:
+        ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED");
+        break;
+    case HTTP_EVENT_HEADER_SENT:
+        ESP_LOGD(TAG, "HTTP_EVENT_HEADER_SENT");
+        break;
+    case HTTP_EVENT_ON_HEADER:
+        ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+        break;
+    case HTTP_EVENT_ON_DATA:
+        ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+
+        if (!esp_http_client_is_chunked_response(evt->client))
+        {
+            if (evt->user_data)
+            {
+                memcpy(evt->user_data + output_len, evt->data, evt->data_len);
+            }
+            else
+            {
+                if (output_buffer == NULL)
+                {
+                    output_buffer = (char *)malloc(esp_http_client_get_content_length(evt->client));
+                    output_len = 0;
+                    if (output_buffer == NULL)
+                    {
+                        ESP_LOGE(TAG, "Failed to allocate memory for output buffer");
+                        return ESP_FAIL;
+                    }
+                }
+                memcpy(output_buffer + output_len, evt->data, evt->data_len);
+            }
+            output_len += evt->data_len;
+        }
+
+        break;
+    case HTTP_EVENT_ON_FINISH:
+        ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
+        if (output_buffer != NULL)
+        {
+            free(output_buffer);
+            output_buffer = NULL;
+        }
+        output_len = 0;
+        break;
+    case HTTP_EVENT_DISCONNECTED:
+        ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
+        int mbedtls_err = 0;
+        esp_err_t err = esp_tls_get_and_clear_last_error((esp_tls_error_handle_t)evt->data, &mbedtls_err, NULL);
+        if (err != 0)
+        {
+            ESP_LOGI(TAG, "Last esp error code: 0x%x", err);
+            ESP_LOGI(TAG, "Last mbedtls failure: 0x%x", mbedtls_err);
+        }
+        if (output_buffer != NULL)
+        {
+            free(output_buffer);
+            output_buffer = NULL;
+        }
+        output_len = 0;
+        break;
+    default:
+        break;
+    }
+    return ESP_OK;
+}
+
+void https(void *param)
+{
+    char local_response_buffer[1024] = {0};
+    esp_http_client_config_t config = {
+        .url = "https://dummyjson.com/products/1",
+        .method = HTTP_METHOD_GET,
+        .event_handler = _http_event_handler,
+        .user_data = local_response_buffer,
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    esp_err_t err = esp_http_client_perform(client);
+    if (err == ESP_OK)
+    {
+        ESP_LOGI("https", "Status = %d, content_length = %lld", esp_http_client_get_status_code(client),
+                 esp_http_client_get_content_length(client));
+    }
+    else
+    {
+        ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
+    }
+
+    ESP_LOGI(TAG, "local_response_buffer：%s", local_response_buffer);
+
+    cJSON *pJsonRoot = cJSON_Parse(local_response_buffer);
+
+    if (pJsonRoot != NULL)
+    {
+        cJSON *pMacAdress = cJSON_GetObjectItem(pJsonRoot, "brand");
+        char *brand = pMacAdress->valuestring;
+        char *buffer = (char *)malloc(strlen(brand) + 1);
+        memmove(buffer, brand, strlen(brand) + 1);
+
+        ESP_LOGI(TAG, "C ESP_LOGE 输出-->：brand %s", buffer);
+        printf("C printf 输出-->：brand %s\n", buffer);
+        free(buffer);
+        buffer = NULL;
+    }
+
+    vTaskDelay(3 * 1000 / portTICK_PERIOD_MS);
+    esp_http_client_cleanup(client);
+    esp_wifi_stop();
+    vTaskDelete(NULL);
+}
+
+void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+{
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
+    {
+        esp_wifi_connect();
+    }
+
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        ESP_LOGI("ESP32", "ESP32电台与AP断开连接");
+        esp_wifi_connect();
+    }
+
+    if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    {
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+        ESP_LOGI("ESP32", "IP地址: " IPSTR, IP2STR(&event->ip_info.ip));
+        xTaskCreate(&https, "https_get_task", 8192, NULL, 5, NULL);
+    }
+}
+void app_main()
+{
+
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+
+    ESP_ERROR_CHECK(err);
+
+    esp_netif_init();
+    esp_event_loop_create_default();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    esp_wifi_init(&cfg);
+    esp_netif_create_default_wifi_sta();
+
+    wifi_sta_config_t cfg_sta = {
+        .ssid = "UPGRADE_AP",
+        .password = "TEST1234",
+    };
+    esp_wifi_set_config(WIFI_IF_STA, (wifi_config_t *)&cfg_sta);
+    esp_wifi_set_mode(WIFI_MODE_STA);
+    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_handler, NULL, NULL);
+    esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL, NULL);
+    esp_wifi_start();
+}
