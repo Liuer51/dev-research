@@ -1,0 +1,16 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "files.associations": {
+    "esp_flash.h": "c",
+    "inttypes.h": "c",
+    "esp_http_client.h": "c",
+    "esp_tls.h": "c"
+  },
+  "idf.adapterTargetName": "esp32s3",
+  "idf.flashType": "UART",
+  "idf.portWin": "COM4",
+  "idf.openOcdConfigs": [
+    "interface/ftdi/esp32_devkitj_v1.cfg",
+    "target/esp32s3.cfg"
+  ]
+}

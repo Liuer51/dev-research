@@ -1,0 +1,19 @@
+CMake Error:
+  Running
+
+   'C:/D/ESP-IDF/tools/tools/ninja/1.10.2/ninja.exe' '-C' 'C:/Users/28426/Desktop/tj/puzzle2/build/CMakeFiles/CMakeTmp' '-t' 'recompact'
+
+  failed with:
+
+   ninja: error: failed recompaction: Permission denied
+
+
+
+CMake Error at C:/D/ESP-IDF/tools/tools/cmake/3.24.0/share/cmake-3.24/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile):
+  Failed to generate test project build system.
+Call Stack (most recent call first):
+  C:/D/ESP-IDF/tools/tools/cmake/3.24.0/share/cmake-3.24/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)
+  C:/D/ESP-IDF/esp-idf/tools/cmake/project.cmake:448 (__project)
+  CMakeLists.txt:6 (project)
+
+

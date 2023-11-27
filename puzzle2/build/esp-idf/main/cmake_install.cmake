@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/28426/Desktop/4/dev-research-master/puzzle2/main
+# Install script for directory: C:/Users/28426/Desktop/tj/puzzle2/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

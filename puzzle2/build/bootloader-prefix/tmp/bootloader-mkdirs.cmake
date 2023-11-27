@@ -5,18 +5,18 @@ cmake_minimum_required(VERSION 3.5)
 
 file(MAKE_DIRECTORY
   "C:/D/ESP-IDF/esp-idf/components/bootloader/subproject"
-  "C:/Users/28426/Desktop/4/dev-research-master/puzzle2/build/bootloader"
-  "C:/Users/28426/Desktop/4/dev-research-master/puzzle2/build/bootloader-prefix"
-  "C:/Users/28426/Desktop/4/dev-research-master/puzzle2/build/bootloader-prefix/tmp"
-  "C:/Users/28426/Desktop/4/dev-research-master/puzzle2/build/bootloader-prefix/src/bootloader-stamp"
-  "C:/Users/28426/Desktop/4/dev-research-master/puzzle2/build/bootloader-prefix/src"
-  "C:/Users/28426/Desktop/4/dev-research-master/puzzle2/build/bootloader-prefix/src/bootloader-stamp"
+  "C:/Users/28426/Desktop/tj/puzzle2/build/bootloader"
+  "C:/Users/28426/Desktop/tj/puzzle2/build/bootloader-prefix"
+  "C:/Users/28426/Desktop/tj/puzzle2/build/bootloader-prefix/tmp"
+  "C:/Users/28426/Desktop/tj/puzzle2/build/bootloader-prefix/src/bootloader-stamp"
+  "C:/Users/28426/Desktop/tj/puzzle2/build/bootloader-prefix/src"
+  "C:/Users/28426/Desktop/tj/puzzle2/build/bootloader-prefix/src/bootloader-stamp"
 )
 
 set(configSubDirs )
 foreach(subDir IN LISTS configSubDirs)
-    file(MAKE_DIRECTORY "C:/Users/28426/Desktop/4/dev-research-master/puzzle2/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
+    file(MAKE_DIRECTORY "C:/Users/28426/Desktop/tj/puzzle2/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
 endforeach()
 if(cfgdir)
-  file(MAKE_DIRECTORY "C:/Users/28426/Desktop/4/dev-research-master/puzzle2/build/bootloader-prefix/src/bootloader-stamp${cfgdir}") # cfgdir has leading slash
+  file(MAKE_DIRECTORY "C:/Users/28426/Desktop/tj/puzzle2/build/bootloader-prefix/src/bootloader-stamp${cfgdir}") # cfgdir has leading slash
 endif()

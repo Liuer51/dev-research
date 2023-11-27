@@ -1,0 +1,9 @@
+-- Found Git: C:/D/ESP-IDF/tools/tools/idf-git/2.39.2/cmd/git.exe (found version "2.39.2.windows.1") 
+-- ccache will be used for faster recompilation
+-- The C compiler identification is GNU 12.2.0
+-- The CXX compiler identification is GNU 12.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: C:/D/ESP-IDF/tools/tools/xtensa-esp32s3-elf/esp-12.2.0_20230208/xtensa-esp32s3-elf/bin/xtensa-esp32s3-elf-gcc.exe
+-- Detecting C compiler ABI info
+-- Configuring incomplete, errors occurred!
+See also "C:/Users/28426/Desktop/tj/puzzle2/build/CMakeFiles/CMakeOutput.log".
